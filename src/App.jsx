@@ -20,6 +20,7 @@ function App() {
   const [currentPrompt, setCurrentPrompt] = useState('');
   const [usedPrompts, setUsedPrompts] = useState([]);
   const [isHovering, setIsHovering] = useState(false);
+  const [showSecret, setShowSecret] = useState(false);
 
   // Custom Cursor Spring Physics
   const mouseX = useSpring(0, { damping: 40, stiffness: 250, mass: 0.8 });
@@ -79,9 +80,36 @@ function App() {
             {/* HERO SECTION */}
             <section className="hero-fullscreen" ref={heroRef}>
               <motion.div style={{ scale, opacity, y: yHero }} className="hero-content">
-                <span className="hero-tagline">MUSE COLLECTION 2026</span>
-                <h1 className="hero-title">Atelier<br /><span className="italic">of</span> Muskan</h1>
-                <p className="hero-desc">An immersive experience celebrating artistic soul and shared inspiration.</p>
+                <motion.span
+                  className="hero-tagline"
+                  initial={{ opacity: 0, letterSpacing: "1rem" }}
+                  animate={{ opacity: 1, letterSpacing: "0.6rem" }}
+                  transition={{ duration: 1.5, ease: "easeOut" }}
+                >
+                  MUSE COLLECTION 2026
+                </motion.span>
+                <h1 className="hero-title">
+                  Atelier<br />
+                  <span className="italic">of</span>{' '}
+                  <motion.span
+                    className="creators-name"
+                    onClick={() => { setShowSecret(true); fireConfetti(); }}
+                    onMouseEnter={() => setIsHovering(true)}
+                    onMouseLeave={() => setIsHovering(false)}
+                    whileHover={{ scale: 1.05, color: "var(--accent-gold)" }}
+                    title="Click for a surprise"
+                  >
+                    Muskan
+                  </motion.span>
+                </h1>
+                <motion.p
+                  className="hero-desc"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.8, duration: 1 }}
+                >
+                  An immersive experience celebrating artistic soul and shared inspiration.
+                </motion.p>
                 <motion.div
                   animate={{ y: [0, 15, 0] }}
                   transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
@@ -372,6 +400,47 @@ function App() {
           </motion.div>
         </motion.div>
       </footer>
+
+      {/* THE SECRET CANVAS EASTER EGG */}
+      <AnimatePresence>
+        {showSecret && (
+          <motion.div
+            className="secret-overlay"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setShowSecret(false)}
+          >
+            <motion.div
+              className="secret-card"
+              initial={{ scale: 0.5, rotate: -10, y: 100 }}
+              animate={{ scale: 1, rotate: 0, y: 0 }}
+              exit={{ scale: 0.5, opacity: 0, y: 50 }}
+              transition={{ type: "spring", damping: 15 }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="secret-inner">
+                <Sparkles className="secret-icon" size={48} />
+                <h2>The Artist's Heart</h2>
+                <div className="secret-divider"></div>
+                <p>
+                  "Art is the only way to run away without leaving home."<br />
+                  <br />
+                  Muskan, your creativity isn't just in the paintings—it's in the way you see the world.
+                  Every click in this gallery is a step through your beautiful mind.
+                  Stay bold, stay artistic, stay uniquely you.
+                </p>
+                <button
+                  className="close-secret-btn"
+                  onClick={() => setShowSecret(false)}
+                >
+                  Close Secret
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

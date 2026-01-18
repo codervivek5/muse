@@ -193,6 +193,29 @@
     font-family: var(--font-serif);
 }
 
+.creators-name {
+    color: var(--gallery-dark);
+    display: inline-block;
+    cursor: pointer;
+    position: relative;
+    transition: color 0.4s var(--ease-out-expo);
+}
+
+.creators-name::after {
+    content: '';
+    position: absolute;
+    bottom: 5px;
+    left: 0;
+    width: 0;
+    height: 3px;
+    background: var(--accent-gold);
+    transition: width 0.6s var(--ease-out-expo);
+}
+
+.creators-name:hover::after {
+    width: 100%;
+}
+
 .hero-desc {
     font-size: 1.4rem;
     color: var(--text-muted);
@@ -847,13 +870,93 @@
     transform: translateY(-5px);
 }
 
-@media (max-width: 1200px) {
-    .modal-modern {
-        max-width: 800px;
+/* SECRET CANVAS - PREMIUM STYLING */
+.secret-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.95);
+    z-index: 30000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    backdrop-filter: blur(15px);
+}
+
+.secret-card {
+    background: white;
+    width: 100%;
+    max-width: 600px;
+    padding: 80px 40px;
+    text-align: center;
+    position: relative;
+    border: 1px solid var(--accent-gold);
+    box-shadow: 0 0 100px rgba(212, 175, 55, 0.2);
+}
+
+.secret-inner {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 30px;
+}
+
+.secret-icon {
+    color: var(--accent-gold);
+}
+
+.secret-card h2 {
+    font-family: var(--font-serif);
+    font-size: 3rem;
+    color: var(--gallery-dark);
+    letter-spacing: -1px;
+}
+
+.secret-divider {
+    width: 100px;
+    height: 1px;
+    background: var(--accent-gold);
+    opacity: 0.5;
+}
+
+.secret-card p {
+    font-size: 1.4rem;
+    line-height: 1.8;
+    color: #444;
+    font-family: var(--font-serif);
+    font-style: italic;
+}
+
+.close-secret-btn {
+    margin-top: 20px;
+    background: var(--gallery-dark);
+    color: white;
+    border: none;
+    padding: 15px 40px;
+    font-size: 0.9rem;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.close-secret-btn:hover {
+    background: var(--accent-gold);
+    color: black;
+}
+
+@media (max-width: 768px) {
+    .secret-card {
+        padding: 50px 20px;
     }
 
-    .modal-content-modern h3 {
-        font-size: 3rem;
+    .secret-card h2 {
+        font-size: 2.2rem;
+    }
+
+    .secret-card p {
+        font-size: 1.2rem;
     }
 }
 
