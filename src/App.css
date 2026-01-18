@@ -81,7 +81,7 @@
     background: var(--accent-gold);
     border-radius: 50%;
     pointer-events: none;
-    z-index: 20000;
+    z-index: 40000;
     /* Ensure it stays above everything, including modals */
     transform: translate(-50%, -50%);
     /* Centering */
@@ -216,11 +216,36 @@
     width: 100%;
 }
 
+.creators-name:hover {
+    cursor: pointer !important;
+}
+
 .hero-desc {
     font-size: 1.4rem;
     color: var(--text-muted);
     max-width: 600px;
     line-height: 1.6;
+}
+
+.contact-trigger-btn {
+    background: none;
+    border: 1px solid var(--accent-gold);
+    color: var(--accent-gold);
+    padding: 12px 30px;
+    font-size: 0.85rem;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.4s var(--ease-out-expo);
+    border-radius: 40px;
+    margin-top: 10px;
+}
+
+.contact-trigger-btn:hover {
+    background: var(--accent-gold);
+    color: black;
+    box-shadow: 0 10px 20px rgba(212, 175, 55, 0.2);
 }
 
 /* ARTIST STATEMENT - REFINED */
@@ -894,6 +919,21 @@
     box-shadow: 0 0 100px rgba(212, 175, 55, 0.2);
 }
 
+.secret-close-x {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    background: none;
+    border: none;
+    color: #999;
+    cursor: pointer;
+    transition: color 0.3s;
+}
+
+.secret-close-x:hover {
+    color: var(--accent-gold);
+}
+
 .secret-inner {
     display: flex;
     flex-direction: column;
@@ -1117,6 +1157,96 @@
     .gallery-header h2 {
         font-size: 2.2rem;
     }
+}
+
+/* CONTACT FORM PREMIUM STYLING */
+.contact-modal {
+    max-width: 600px !important;
+}
+
+.contact-form-container {
+    padding: 60px 40px;
+    background: white;
+    overflow-y: auto;
+    /* Enable scrolling */
+    flex-grow: 1;
+    /* Take up remaining space */
+}
+
+@media (max-width: 768px) {
+    .contact-form-container {
+        padding: 40px 20px;
+    }
+
+    .hero-fullscreen {
+        padding-top: 0;
+    }
+
+    .contact-trigger-btn {
+        padding: 10px 20px;
+        font-size: 0.75rem;
+    }
+}
+
+.canvas-header {
+    text-align: center;
+    margin-bottom: 50px;
+}
+
+.canvas-header h2 {
+    font-size: 2.5rem;
+    margin-top: 15px;
+    margin-bottom: 10px;
+}
+
+.canvas-header p {
+    color: var(--text-muted);
+    font-size: 1rem;
+}
+
+.contact-fields {
+    display: flex;
+    flex-direction: column;
+    gap: 25px;
+}
+
+.field-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.field-group label {
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: #333;
+}
+
+.field-group input,
+.field-group textarea {
+    padding: 15px;
+    border: 1px solid #eee;
+    font-family: var(--font-sans);
+    font-size: 1rem;
+    background: #fbfbfb;
+    transition: border 0.3s;
+}
+
+.field-group input:focus,
+.field-group textarea:focus {
+    outline: none;
+    border-color: var(--accent-gold);
+}
+
+.contact-actions {
+    margin-top: 50px;
+}
+
+.send-inquiry-btn {
+    width: 100%;
+    padding: 20px !important;
 }
 
 /* Specific Fixes for Smallest Screens */

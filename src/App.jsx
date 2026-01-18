@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence, useScroll, useTransform, useSpring, useInView } from 'framer-motion';
 import { Palette, Brush, Paintbrush, ChevronLeft, RefreshCcw, Gift, X, Camera, ArrowDown, Info, Sparkles } from 'lucide-react';
 import confetti from 'canvas-confetti';
+import Swal from 'sweetalert2';
 import { gameCategories } from './data/gameData';
 import { galleryData } from './data/galleryData';
 import './App.css';
@@ -21,6 +22,7 @@ function App() {
   const [usedPrompts, setUsedPrompts] = useState([]);
   const [isHovering, setIsHovering] = useState(false);
   const [showSecret, setShowSecret] = useState(false);
+  const [showContact, setShowContact] = useState(false);
 
   // Custom Cursor Spring Physics
   const mouseX = useSpring(0, { damping: 40, stiffness: 250, mass: 0.8 });
@@ -48,6 +50,41 @@ function App() {
     setCurrentPrompt(firstPrompt);
     setUsedPrompts([firstPrompt]);
     setCurrentMode('reflections');
+  };
+
+  const handleContactSubmit = async (e) => {
+    e.preventDefault();
+    const formData = new FormData(e.target);
+
+    try {
+      const response = await fetch("https://formsubmit.co/ajax/muskan742275@gmail.com", {
+        method: "POST",
+        body: formData
+      });
+
+      if (response.ok) {
+        setShowContact(false);
+        fireConfetti();
+        Swal.fire({
+          title: 'Message Received!',
+          text: 'Muskan will review your vision and get back to you soon.',
+          icon: 'success',
+          confirmButtonColor: '#121212',
+          background: '#ffffff',
+          color: '#121212',
+          fontFamily: "'Playfair Display', serif"
+        });
+      } else {
+        throw new Error('Failed to send');
+      }
+    } catch (error) {
+      Swal.fire({
+        title: 'Oops...',
+        text: 'Something went wrong. Please try again later or contact us directly.',
+        icon: 'error',
+        confirmButtonColor: '#121212'
+      });
+    }
   };
 
   const fireConfetti = () => {
@@ -98,6 +135,7 @@ function App() {
                     onMouseLeave={() => setIsHovering(false)}
                     whileHover={{ scale: 1.05, color: "var(--accent-gold)" }}
                     title="Click for a surprise"
+                    style={{ cursor: 'pointer' }}
                   >
                     Muskan
                   </motion.span>
@@ -110,6 +148,19 @@ function App() {
                 >
                   An immersive experience celebrating artistic soul and shared inspiration.
                 </motion.p>
+
+                <motion.button
+                  className="contact-trigger-btn"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  whileHover={{ scale: 1.05, y: -5 }}
+                  transition={{ delay: 1.2 }}
+                  onClick={() => setShowContact(true)}
+                  onMouseEnter={() => setIsHovering(true)}
+                  onMouseLeave={() => setIsHovering(false)}
+                >
+                  Collaborate with Muskan
+                </motion.button>
                 <motion.div
                   animate={{ y: [0, 15, 0] }}
                   transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
@@ -419,6 +470,9 @@ function App() {
               transition={{ type: "spring", damping: 15 }}
               onClick={(e) => e.stopPropagation()}
             >
+              <button className="secret-close-x" onClick={() => setShowSecret(false)}>
+                <X size={24} />
+              </button>
               <div className="secret-inner">
                 <Sparkles className="secret-icon" size={48} />
                 <h2>The Artist's Heart</h2>
@@ -437,6 +491,82 @@ function App() {
                   Close Secret
                 </button>
               </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* CONTACT MODAL */}
+      <AnimatePresence>
+        {showContact && (
+          <motion.div
+            className="modal-backdrop"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setShowContact(false)}
+          >
+            <motion.div
+              className="modal-modern contact-modal"
+              initial={{ y: 100, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: 100, opacity: 0 }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="modal-header-os">
+                <div className="window-controls">
+                  <div className="control close" onClick={() => setShowContact(false)}></div>
+                  <div className="control minimize"></div>
+                  <div className="control maximize"></div>
+                </div>
+                <div className="modal-title-bar">Send an Inquiry — Muskan's Studio</div>
+                <button className="close-x-btn" onClick={() => setShowContact(false)}>
+                  <X size={18} />
+                </button>
+              </div>
+
+              <form
+                onSubmit={handleContactSubmit}
+                className="contact-form-container"
+              >
+                {/* FormSubmit Configuration */}
+                <input type="hidden" name="_subject" value="New Inquiry from Atelier of Muskan!" />
+                <input type="hidden" name="_template" value="table" />
+                <input type="hidden" name="_captcha" value="false" />
+                <input type="hidden" name="_next" value={window.location.href} />
+
+                <div className="canvas-header">
+                  <Palette size={32} color="var(--accent-gold)" />
+                  <h2>Collaborate with Muskan</h2>
+                  <p>Share your vision and let's create something extraordinary together.</p>
+                </div>
+
+                <div className="contact-fields">
+                  <div className="field-group">
+                    <label>Your Name</label>
+                    <input type="text" name="name" placeholder="Enter your name" required />
+                  </div>
+                  <div className="field-group">
+                    <label>Email Address</label>
+                    <input type="email" name="email" placeholder="hello@example.com" required />
+                  </div>
+                  <div className="field-group">
+                    <label>Your Message</label>
+                    <textarea name="message" placeholder="Describe your inquiry..." rows="4" required></textarea>
+                  </div>
+                </div>
+
+                <div className="contact-actions">
+                  <button
+                    type="submit"
+                    className="modern-button send-inquiry-btn"
+                    onMouseEnter={() => setIsHovering(true)}
+                    onMouseLeave={() => setIsHovering(false)}
+                  >
+                    SEND INQUIRY
+                  </button>
+                </div>
+              </form>
             </motion.div>
           </motion.div>
         )}
