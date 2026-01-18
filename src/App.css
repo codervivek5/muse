@@ -844,7 +844,27 @@
     color: var(--accent-gold);
     display: flex;
     align-items: center;
+    gap: 30px;
+}
+
+.footer-social-links {
+    display: flex;
     gap: 20px;
+    margin-right: 10px;
+}
+
+.social-icon-link {
+    color: var(--gallery-dark);
+    opacity: 0.6;
+    transition: all 0.4s var(--ease-out-expo);
+    display: flex;
+    align-items: center;
+}
+
+.social-icon-link:hover {
+    opacity: 1;
+    transform: translateY(-5px);
+    color: var(--accent-gold);
 }
 
 .gift-glow {
@@ -1247,6 +1267,31 @@
 .send-inquiry-btn {
     width: 100%;
     padding: 20px !important;
+}
+
+.contact-alt-text {
+    margin-top: 25px;
+    margin-bottom: 10px;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-weight: 600;
+}
+
+.contact-insta-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--gallery-dark);
+    text-decoration: none;
+    font-weight: 700;
+    font-size: 1.1rem;
+    transition: color 0.3s;
+}
+
+.contact-insta-link:hover {
+    color: var(--accent-gold);
 }
 
 /* Specific Fixes for Smallest Screens */

@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence, useScroll, useTransform, useSpring, useInView } from 'framer-motion';
-import { Palette, Brush, Paintbrush, ChevronLeft, RefreshCcw, Gift, X, Camera, ArrowDown, Info, Sparkles } from 'lucide-react';
+import { Palette, Brush, Paintbrush, ChevronLeft, RefreshCcw, Gift, X, Camera, ArrowDown, Info, Sparkles, Instagram } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import Swal from 'sweetalert2';
 import { gameCategories } from './data/gameData';
@@ -443,6 +443,23 @@ function App() {
           onMouseLeave={() => setIsHovering(false)}
         >
           <motion.div
+            className="footer-social-links"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 1 }}
+          >
+            <motion.a
+              href="https://www.instagram.com/muskymuse/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="social-icon-link"
+              whileHover={{ y: -5, color: "var(--accent-gold)" }}
+            >
+              <Instagram size={24} strokeWidth={1.5} />
+            </motion.a>
+          </motion.div>
+
+          <motion.div
             className="gift-glow"
             whileHover={{ y: -10, scale: 1.2, rotate: 5 }}
             transition={{ type: "spring", stiffness: 300 }}
@@ -565,6 +582,15 @@ function App() {
                   >
                     SEND INQUIRY
                   </button>
+                  <p className="contact-alt-text">or find me on</p>
+                  <a
+                    href="https://www.instagram.com/muskymuse/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="contact-insta-link"
+                  >
+                    <Instagram size={18} /> @muskymuse
+                  </a>
                 </div>
               </form>
             </motion.div>
