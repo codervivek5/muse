@@ -1,0 +1,60 @@
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Inter:wght@300;400;600&display=swap');
+
+:root {
+  --gallery-dark: #121212;
+  --gallery-light: #ffffff;
+  --accent-gold: #D4AF37;
+  --accent-rose: #E97451;
+  --text-muted: #888888;
+
+  --font-serif: 'Playfair Display', serif;
+  --font-sans: 'Inter', sans-serif;
+
+  --ease-out-expo: cubic-bezier(0.19, 1, 0.22, 1);
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  font-family: var(--font-sans);
+  background: var(--gallery-light);
+  color: var(--gallery-dark);
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--font-serif);
+  font-weight: 700;
+  line-height: 1.1;
+}
+
+/* Custom Selection */
+::selection {
+  background: var(--accent-gold);
+  color: white;
+}
+
+/* Smooth Scroll Container */
+.smooth-scroll-container {
+  overflow: hidden;
+}
+
+section {
+  position: relative;
+  width: 100%;
+  padding: 100px 5%;
+}
+
+@media (max-width: 768px) {
+  section {
+    padding: 60px 5%;
+  }
+}

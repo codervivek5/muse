@@ -1,0 +1,53 @@
+@keyframes brushStroke {
+    0% {
+        mask-size: 0% 100%;
+        -webkit-mask-size: 0% 100%;
+    }
+
+    100% {
+        mask-size: 100% 100%;
+        -webkit-mask-size: 100% 100%;
+    }
+}
+
+.animate-brush {
+    mask-image: linear-gradient(to right, black, black);
+    -webkit-mask-image: linear-gradient(to right, black, black);
+    mask-repeat: no-repeat;
+    -webkit-mask-repeat: no-repeat;
+    animation: brushStroke 1s ease-out forwards;
+}
+
+@keyframes float {
+
+    0%,
+    100% {
+        transform: translateY(0);
+    }
+
+    50% {
+        transform: translateY(-10px);
+    }
+}
+
+.floating {
+    animation: float 4s ease-in-out infinite;
+}
+
+@keyframes subtlePulse {
+
+    0%,
+    100% {
+        transform: scale(1);
+        opacity: 0.8;
+    }
+
+    50% {
+        transform: scale(1.05);
+        opacity: 1;
+    }
+}
+
+.pulse-artist {
+    animation: subtlePulse 3s ease-in-out infinite;
+}
