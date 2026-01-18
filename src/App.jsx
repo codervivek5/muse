@@ -305,20 +305,24 @@ function App() {
           >
             <motion.div
               className="modal-modern"
-              initial={{ scale: 0.8, y: 150 }}
-              animate={{ scale: 1, y: 0 }}
-              exit={{ scale: 0.7, opacity: 0, y: 100 }}
+              initial={{ scale: 0.8, opacity: 0, y: 100 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.8, opacity: 0, y: 50 }}
               transition={{ type: 'spring', damping: 25, stiffness: 120 }}
               onClick={(e) => e.stopPropagation()}
             >
-              <button
-                className="close-modern"
-                onClick={() => setSelectedPhoto(null)}
-                onMouseEnter={() => setIsHovering(true)}
-                onMouseLeave={() => setIsHovering(false)}
-              >
-                <X size={32} />
-              </button>
+              <div className="modal-header-os">
+                <div className="window-controls">
+                  <div className="control close" onClick={() => setSelectedPhoto(null)}></div>
+                  <div className="control minimize"></div>
+                  <div className="control maximize"></div>
+                </div>
+                <div className="modal-title-bar">Muskan's Atelier — {selectedPhoto.title}</div>
+                <button className="close-x-btn" onClick={() => setSelectedPhoto(null)}>
+                  <X size={18} />
+                </button>
+              </div>
+
               <div className="modal-inner">
                 <div className="modal-img">
                   <img src={selectedPhoto.url} alt="" />
