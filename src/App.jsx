@@ -152,16 +152,30 @@ function App() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
               >
-                <h3>Curator's Workspace</h3>
-                <p>Ready to explore the deeper meaning behind the canvas?</p>
-                <button
+                <motion.h3
+                  initial={{ opacity: 0, x: -20 }}
+                  whileInView={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.2 }}
+                >
+                  Curator's Workspace
+                </motion.h3>
+                <motion.p
+                  initial={{ opacity: 0, x: 20 }}
+                  whileInView={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.4 }}
+                >
+                  Ready to explore the deeper meaning behind the canvas?
+                </motion.p>
+                <motion.button
                   onClick={() => setCurrentMode('menu')}
                   className="modern-button"
                   onMouseEnter={() => setIsHovering(true)}
                   onMouseLeave={() => setIsHovering(false)}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
                 >
                   Begin Reflection
-                </button>
+                </motion.button>
               </motion.div>
             </section>
           </motion.div>
@@ -349,7 +363,13 @@ function App() {
           onMouseEnter={() => setIsHovering(true)}
           onMouseLeave={() => setIsHovering(false)}
         >
-          <Gift onClick={fireConfetti} size={40} strokeWidth={1} style={{ cursor: 'pointer' }} />
+          <motion.div
+            className="gift-glow"
+            whileHover={{ y: -10, scale: 1.2, rotate: 5 }}
+            transition={{ type: "spring", stiffness: 300 }}
+          >
+            <Gift onClick={fireConfetti} size={40} strokeWidth={1} style={{ cursor: 'pointer' }} />
+          </motion.div>
         </motion.div>
       </footer>
     </div>
@@ -366,7 +386,9 @@ function ParallaxItem({ item, index, onClick, setIsHovering }) {
     offset: ["start end", "end start"]
   });
 
-  const y = useTransform(scrollYProgress, [0, 1], [0, index % 2 === 0 ? -150 : 150]);
+  const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+  const parallaxOffset = isMobile ? 40 : 150;
+  const y = useTransform(scrollYProgress, [0, 1], [0, index % 2 === 0 ? -parallaxOffset : parallaxOffset]);
   const rotateSlightly = index % 2 === 0 ? 1 : -1;
 
   return (
