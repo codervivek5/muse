@@ -8,6 +8,11 @@ import { galleryData } from './data/galleryData';
 import './App.css';
 import './styles/animations.css';
 
+import ThemeToggle from './components/ThemeToggle';
+import EphemeralInk from './components/EphemeralInk';
+import Soundscape from './components/Soundscape';
+import SignatureCanvas from './components/SignatureCanvas';
+
 const IconMap = {
   Sparkles: Sparkles,
   Palette: Palette,
@@ -15,6 +20,18 @@ const IconMap = {
 };
 
 function App() {
+  const [theme, setTheme] = useState(() => {
+    // Initial theme: prefer stored value, then system preference, then light
+    if (typeof window !== 'undefined') {
+      const stored = window.localStorage.getItem('muse-theme');
+      if (stored) {
+        return stored === 'golden-hour' ? '' : stored; // migrate old key
+      }
+      const prefersDark = window.matchMedia?.('(prefers-color-scheme: dark)').matches;
+      return prefersDark ? 'midnight-studio' : '';
+    }
+    return '';
+  }); // '', 'midnight-studio'
   const [currentMode, setCurrentMode] = useState('gallery'); // gallery, reflections, menu
   const [selectedPhoto, setSelectedPhoto] = useState(null);
   const [selectedCategory, setSelectedCategory] = useState(null);
@@ -23,6 +40,12 @@ function App() {
   const [isHovering, setIsHovering] = useState(false);
   const [showSecret, setShowSecret] = useState(false);
   const [showContact, setShowContact] = useState(false);
+
+  useEffect(() => {
+    const root = document.documentElement;
+    root.setAttribute('data-theme', theme || '');
+    window.localStorage.setItem('muse-theme', theme || '');
+  }, [theme]);
 
   // Custom Cursor Spring Physics
   const mouseX = useSpring(0, { damping: 40, stiffness: 250, mass: 0.8 });
@@ -69,10 +92,10 @@ function App() {
           title: 'Message Received!',
           text: 'Muskan will review your vision and get back to you soon.',
           icon: 'success',
-          confirmButtonColor: '#121212',
-          background: '#ffffff',
-          color: '#121212',
-          fontFamily: "'Playfair Display', serif"
+          confirmButtonColor: 'var(--accent-gold)',
+          background: 'var(--theme-bg)',
+          color: 'var(--theme-text)',
+          fontFamily: "var(--font-serif)"
         });
       } else {
         throw new Error('Failed to send');
@@ -96,8 +119,34 @@ function App() {
     });
   };
 
+  const handleMediaModuleClick = (type) => {
+    const title =
+      type === 'reel'
+        ? 'Process Reel — Coming Soon'
+        : 'Artist Voiceover — Coming Soon';
+
+    const text =
+      type === 'reel'
+        ? 'You’ll soon be able to watch a short time-lapse of Muskan creating this piece — from first sketch to final detail.'
+        : 'Soon you’ll be able to listen to Muskan talk through the story, choices, and emotions behind this artwork.';
+
+    Swal.fire({
+      title,
+      text,
+      icon: 'info',
+      confirmButtonText: 'Got it',
+      confirmButtonColor: 'var(--accent-gold)',
+      background: 'var(--theme-bg)',
+      color: 'var(--theme-text)',
+      fontFamily: 'var(--font-serif)'
+    });
+  };
+
   return (
     <div className="gallery-layout">
+      <ThemeToggle currentTheme={theme} onThemeChange={setTheme} />
+      <Soundscape />
+      <EphemeralInk />
       {/* Premium Visual Overlays */}
       <div className="grain-overlay"></div>
       <motion.div
@@ -125,6 +174,7 @@ function App() {
                 >
                   MUSE COLLECTION 2026
                 </motion.span>
+
                 <h1 className="hero-title">
                   Atelier<br />
                   <span className="italic">of</span>{' '}
@@ -135,7 +185,7 @@ function App() {
                     onMouseLeave={() => setIsHovering(false)}
                     whileHover={{ scale: 1.05, color: "var(--accent-gold)" }}
                     title="Click for a surprise"
-                    style={{ cursor: 'pointer' }}
+                    style={{ cursor: 'pointer', color: 'var(--theme-text)' }}
                   >
                     Muskan
                   </motion.span>
@@ -424,7 +474,31 @@ function App() {
                   <span className="modal-tag">ARTIST REFLECTION</span>
                   <h3>{selectedPhoto.title}</h3>
                   <p>{selectedPhoto.message}</p>
-                  <div className="modal-signature">
+
+                  {/* Behind the Brush - Multimedia Storytelling */}
+                  <div className="multimedia-module">
+                    <h4 className="multimedia-title">
+                      <Camera size={14} /> Behind the Brush
+                    </h4>
+                    <div className="multimedia-grid">
+                      <div
+                        className="media-item"
+                        onClick={() => handleMediaModuleClick('reel')}
+                      >
+                        <span className="media-placeholder">Play Process Reel</span>
+                        <div className="media-overlay"></div>
+                      </div>
+                      <div
+                        className="media-item"
+                        onClick={() => handleMediaModuleClick('voiceover')}
+                      >
+                        <span className="media-placeholder">Artist Voiceover</span>
+                        <div className="media-overlay"></div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="modal-signature mt-8">
                     <Brush size={20} color="#D4AF37" />
                     <span>Muskan's Signature Collection</span>
                   </div>
@@ -434,6 +508,46 @@ function App() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* THE CURATOR'S LETTER (SUBSCRIBE) */}
+      <section className="curators-letter">
+        <div className="letter-grid">
+          <motion.div
+            initial={{ opacity: 0, x: -30 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true }}
+          >
+            <span className="letter-tag">The Inner Circle</span>
+            <h2 className="letter-title italic">Curator's Weekly Letter</h2>
+            <p className="letter-desc leading-relaxed font-light italic mb-10">Receive a weekly meditation on art, inspiration, and the unseen stories behind the canvas. No noise, just soul.</p>
+          </motion.div>
+          <motion.div
+            className="subscribe-card"
+            initial={{ opacity: 0, x: 30 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true }}
+          >
+            <div className="relative z-10">
+              <input
+                type="email"
+                placeholder="your@email.com"
+                className="subscribe-input"
+              />
+              <SignatureCanvas onSign={() => {/* Handle subscription */ }} />
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className="subscribe-btn"
+              >
+                Join the Collection
+              </motion.button>
+            </div>
+            <div className="subscribe-icon">
+              <Brush size={120} color="#D4AF37" />
+            </div>
+          </motion.div>
+        </div>
+      </section>
 
       <footer className="gallery-footer">
         <div className="footer-logo">Atelier of Muskan</div>
@@ -614,18 +728,19 @@ function ParallaxItem({ item, index, onClick, setIsHovering }) {
   const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
   const parallaxOffset = isMobile ? 40 : 150;
   const y = useTransform(scrollYProgress, [0, 1], [0, index % 2 === 0 ? -parallaxOffset : parallaxOffset]);
+  const z = useTransform(scrollYProgress, [0, 0.5, 1], [-100, 0, 100]);
   const rotateSlightly = index % 2 === 0 ? 1 : -1;
 
   return (
     <motion.div
       ref={ref}
-      style={{ y }}
+      style={{ y, z, perspective: 1000 }}
       className={`grid-item item-${index % 5}`}
       onClick={onClick}
       onMouseEnter={() => setIsHovering(true)}
       onMouseLeave={() => setIsHovering(false)}
-      whileHover={{ scale: 1.02, rotate: rotateSlightly }}
-      transition={{ type: 'spring', stiffness: 300 }}
+      whileHover={{ scale: 1.05, rotate: rotateSlightly, z: 50 }}
+      transition={{ type: 'spring', stiffness: 300, damping: 20 }}
     >
       <div className="item-img-box">
         {/* Entrance Reveal Mask */}

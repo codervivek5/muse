@@ -1,17 +1,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Inter:wght@300;400;600&display=swap');
 
-:root {
-  --gallery-dark: #121212;
-  --gallery-light: #ffffff;
-  --accent-gold: #D4AF37;
-  --accent-rose: #E97451;
-  --text-muted: #888888;
-
-  --font-serif: 'Playfair Display', serif;
-  --font-sans: 'Inter', sans-serif;
-
-  --ease-out-expo: cubic-bezier(0.19, 1, 0.22, 1);
-}
+/* Theme variables live in App.css and are driven via [data-theme] on <html>.
+   Keep only truly-global base styles here. */
 
 * {
   margin: 0;
@@ -20,10 +10,10 @@
   -webkit-tap-highlight-color: transparent;
 }
 
-body {
+html, body {
   font-family: var(--font-sans);
-  background: var(--gallery-light);
-  color: var(--gallery-dark);
+  background: var(--theme-bg, #ffffff);
+  color: var(--theme-text, #121212);
   overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
 }
@@ -39,7 +29,7 @@ h3 {
 /* Custom Selection */
 ::selection {
   background: var(--accent-gold);
-  color: white;
+  color: var(--theme-bg, #ffffff);
 }
 
 /* Smooth Scroll Container */
