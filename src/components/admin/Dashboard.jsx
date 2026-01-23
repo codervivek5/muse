@@ -5,6 +5,7 @@ import imageCompression from 'browser-image-compression';
 import { motion } from 'framer-motion';
 import { Plus, Trash2, Edit2, LogOut, Upload } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import Swal from 'sweetalert2';
 import '../../App.css';
 
 const Dashboard = () => {
@@ -109,7 +110,15 @@ const Dashboard = () => {
                     .eq('id', editingId);
 
                 if (error) throw error;
-                alert("✅ Masterpiece updated successfully!");
+
+                Swal.fire({
+                    title: 'Updated!',
+                    text: 'Masterpiece updated successfully!',
+                    icon: 'success',
+                    confirmButtonColor: '#D4AF37',
+                    background: '#111',
+                    color: '#fff'
+                });
             } else {
                 // Create new
                 if (!imageUrl) throw new Error("Image is required for new items");
@@ -122,7 +131,15 @@ const Dashboard = () => {
                     }]);
 
                 if (error) throw error;
-                alert("✅ New masterpiece published successfully!");
+
+                Swal.fire({
+                    title: 'Published!',
+                    text: 'New masterpiece published successfully!',
+                    icon: 'success',
+                    confirmButtonColor: '#D4AF37',
+                    background: '#111',
+                    color: '#fff'
+                });
             }
 
             // Reset form
@@ -134,7 +151,14 @@ const Dashboard = () => {
 
         } catch (error) {
             console.error("Error saving item:", error);
-            alert("Failed to save item: " + (error.message || "Unknown error"));
+            Swal.fire({
+                title: 'Error',
+                text: 'Failed to save item: ' + (error.message || "Unknown error"),
+                icon: 'error',
+                confirmButtonColor: '#D4AF37',
+                background: '#111',
+                color: '#fff'
+            });
         }
         setUploading(false);
     };
@@ -143,6 +167,7 @@ const Dashboard = () => {
         setEditingId(item.id);
         setTitle(item.title);
         setDescription(item.description);
+        setImage(null); // Clear previous selection if any
         window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
