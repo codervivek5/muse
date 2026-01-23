@@ -100,7 +100,7 @@ function App() {
       } else {
         throw new Error('Failed to send');
       }
-    } catch (error) {
+    } catch {
       Swal.fire({
         title: 'Oops...',
         text: 'Something went wrong. Please try again later or contact us directly.',

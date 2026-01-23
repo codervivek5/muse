@@ -1,5 +1,5 @@
 import React, { useRef, useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
+
 
 const SignatureCanvas = ({ onSign }) => {
     const canvasRef = useRef(null);

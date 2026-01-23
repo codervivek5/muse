@@ -20,7 +20,7 @@ const Soundscape = () => {
         if (isPlaying) {
             audioRef.current.pause();
         } else {
-            audioRef.current.play().catch(err => console.log("Audio play blocked by browser policy"));
+            audioRef.current.play().catch(() => console.log("Audio play blocked by browser policy"));
         }
         setIsPlaying(!isPlaying);
     };
