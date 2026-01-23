@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence, useScroll, useTransform, useSpring, useInView } from 'framer-motion';
-import { Palette, Brush, Paintbrush, ChevronLeft, RefreshCcw, Gift, X, Camera, ArrowDown, Info, Sparkles, Instagram } from 'lucide-react';
+import { Palette, Brush, Paintbrush, ChevronLeft, RefreshCcw, Gift, X, Camera, ArrowDown, Info, Sparkles, Instagram, Play, Mic } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import Swal from 'sweetalert2';
 import { gameCategories } from '../data/gameData';
@@ -513,20 +513,20 @@ function Portfolio() {
                       <Camera size={14} /> Behind the Brush
                     </h4>
                     <div className="multimedia-grid">
-                      <div
-                        className="media-item"
+                      <button
+                        className="media-item-compact"
                         onClick={() => handleMediaModuleClick('reel')}
                       >
-                        <span className="media-placeholder">Play Process Reel</span>
-                        <div className="media-overlay"></div>
-                      </div>
-                      <div
-                        className="media-item"
+                        <Play size={16} fill="currentColor" />
+                        <span>Process Reel</span>
+                      </button>
+                      <button
+                        className="media-item-compact"
                         onClick={() => handleMediaModuleClick('voiceover')}
                       >
-                        <span className="media-placeholder">Artist Voiceover</span>
-                        <div className="media-overlay"></div>
-                      </div>
+                        <Mic size={16} fill="currentColor" />
+                        <span>Artist Voiceover</span>
+                      </button>
                     </div>
                   </div>
 
