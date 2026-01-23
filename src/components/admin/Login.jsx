@@ -99,29 +99,17 @@ const Login = () => {
                     </button>
                 </form>
 
-                <div style={{ marginTop: '30px', textAlign: 'center' }}>
-                    <p style={{ marginBottom: '10px', color: '#888' }}>First time setting up?</p>
+                {/* <div className="login-register-box">
+                    <p className="register-text">First time setting up?</p>
                     <button
                         type="button"
                         onClick={handleRegister}
-                        style={{
-                            background: 'rgba(212, 175, 55, 0.1)',
-                            border: '1px solid #D4AF37',
-                            color: '#D4AF37',
-                            cursor: 'pointer',
-                            padding: '8px 16px',
-                            borderRadius: '4px',
-                            fontSize: '0.9rem',
-                            fontWeight: 'bold',
-                            marginTop: '5px'
-                        }}
+                        className="register-btn"
                     >
                         Register as Admin
                     </button>
-                    <p style={{ fontSize: '0.8rem', color: '#666', marginTop: '10px' }}>
-                        Note: You must have Auth enabled in Supabase.
-                    </p>
-                </div>
+
+                </div> */}
             </motion.div>
         </div>
     );
