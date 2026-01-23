@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence, useScroll, useTransform, useSpring, useInView } from 'framer-motion';
-import { Palette, Brush, Paintbrush, ChevronLeft, RefreshCcw, Gift, X, Camera, ArrowDown, Info, Sparkles, Instagram, Play, Mic } from 'lucide-react';
+import { Palette, Brush, Paintbrush, ChevronLeft, RefreshCcw, Gift, X, Camera, ArrowDown, Info, Sparkles, Play, Mic } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import Swal from 'sweetalert2';
 import { gameCategories } from '../data/gameData';
@@ -15,6 +15,26 @@ import ThemeToggle from './ThemeToggle';
 import EphemeralInk from './EphemeralInk';
 import Soundscape from './Soundscape';
 import SignatureCanvas from './SignatureCanvas';
+
+// Custom Instagram Icon to replace deprecated lucide-react version
+const Instagram = ({ size = 24, strokeWidth = 2, ...props }) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth={strokeWidth}
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    {...props}
+  >
+    <rect width="20" height="20" x="2" y="2" rx="5" ry="5" />
+    <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
+    <line x1="17.5" x2="17.51" y1="6.5" y2="6.5" />
+  </svg>
+);
 
 function Portfolio() {
   const [theme, setTheme] = useState(() => {
