@@ -20,7 +20,7 @@ const Login = () => {
             await signup(email, password);
             Swal.fire({
                 title: 'Registration Initiated!',
-                text: 'Please check your email for a confirmation link (if enabled in Supabase) or try logging in if you have auto-confirm enabled.',
+                text: 'A confirmation link has been sent to your email. Please check your inbox.',
                 icon: 'success',
                 confirmButtonColor: '#D4AF37',
                 background: '#111',
@@ -44,7 +44,7 @@ const Login = () => {
         } catch (err) {
             console.error("Login error:", err);
             if (err.message === 'Email not confirmed') {
-                setError('Please confirm your email address. Check your inbox for the confirmation link from Supabase.');
+                setError('Please confirm your email address. Check your inbox for the confirmation link.');
             } else if (err.status === 400) {
                 setError('Invalid login credentials. Please check your email and password.');
             } else {
