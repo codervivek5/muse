@@ -3,7 +3,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { supabase } from '../../supabaseClient';
 import imageCompression from 'browser-image-compression';
 import { motion } from 'framer-motion';
-import { Plus, Trash2, Edit2, LogOut, Upload } from 'lucide-react';
+import { Plus, Trash2, Edit2, LogOut, Upload, Image as ImageIcon, XCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import Swal from 'sweetalert2';
 import '../../App.css';
@@ -18,12 +18,18 @@ const Dashboard = () => {
     const [editingId, setEditingId] = useState(null);
     const [title, setTitle] = useState('');
     const [description, setDescription] = useState('');
+    // 'image' holds the NEW file object selected from the computer
     const [image, setImage] = useState(null);
-    const [uploading, setUploading] = useState(false);
+    // 'previewUrl' holds the URL to display in the form (either existing remote URL or new local preview)
+    const [previewUrl, setPreviewUrl] = useState(null);
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [statusText, setStatusText] = useState('');
+
 
     useEffect(() => {
         fetchItems();
     }, []);
+
 
     const fetchItems = async () => {
         setLoading(true);
@@ -37,9 +43,11 @@ const Dashboard = () => {
             setItems(data || []);
         } catch (error) {
             console.error("Error fetching items:", error);
+            Swal.fire({ icon: 'error', title: 'Error loading items', text: error.message, background: '#111', color: '#fff' });
         }
         setLoading(false);
     };
+
 
     const handleLogout = async () => {
         try {
@@ -50,148 +58,243 @@ const Dashboard = () => {
         }
     };
 
+
+    // --- New Image Selection Handler ---
+    const handleImageSelect = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            // 1. Store the actual file object for eventual upload
+            setImage(file);
+            // 2. Create a temporary local URL for immediate preview feedback
+            setPreviewUrl(URL.createObjectURL(file));
+        }
+    };
+
+    // --- Clear selected image while editing ---
+    const clearSelectedImage = () => {
+        setImage(null);
+        // If editing, revert preview back to the original item's image
+        if (editingId) {
+            const originalItem = items.find(i => i.id === editingId);
+            setPreviewUrl(originalItem ? originalItem.image_url : null);
+        } else {
+            setPreviewUrl(null);
+        }
+        // Reset file input value so onChange fires again if same file chosen
+        document.getElementById('artwork-file-input').value = "";
+    };
+
+
     const handleSubmit = async (e) => {
         e.preventDefault();
-        setUploading(true);
+
+        if (!title || !description) {
+            Swal.fire({ icon: 'warning', title: 'Missing Info', text: 'Title and description are required.', background: '#111', color: '#fff' });
+            return;
+        }
+
+        // Validation: Creating new requires an image
+        if (!editingId && !image) {
+            Swal.fire({ icon: 'warning', title: 'Image Required', text: 'Please select an image for the new masterpiece.', background: '#111', color: '#fff' });
+            return;
+        }
+
+        setIsSubmitting(true);
+        setStatusText('Preparing...');
 
         try {
-            let imageUrl = '';
+            let finalImageUrl = null;
 
-            // Upload Image to Supabase Storage if selected
+            // --- Image Upload Logic ---
+            // Only attempt upload if a NEW image file has been selected into state
             if (image) {
-                // Image Compression
+                setStatusText('Compressing Image...');
                 const options = {
-                    maxSizeMB: 0.2, // 200KB
+                    maxSizeMB: 0.3, // Slightly larger limit (300KB) to ensure quality
                     maxWidthOrHeight: 1920,
-                    useWebWorker: true
+                    useWebWorker: true,
+                    fileType: 'image/jpeg' // ensure output is jpeg for consistency
                 };
 
                 let fileToUpload = image;
                 try {
-                    console.log('Original size:', image.size / 1024 / 1024, 'MB');
-                    fileToUpload = await imageCompression(image, options);
-                    console.log('Compressed size:', fileToUpload.size / 1024 / 1024, 'MB');
+                    // console.log('Original size:', (image.size / 1024 / 1024).toFixed(2), 'MB');
+                    const compressedFile = await imageCompression(image, options);
+                    // console.log('Compressed size:', (compressedFile.size / 1024 / 1024).toFixed(2), 'MB');
+                    // Ensure the compressed result is actually a Blob/File before using
+                    if (compressedFile instanceof Blob) {
+                        fileToUpload = compressedFile;
+                    }
                 } catch (compressionError) {
-                    console.error('Compression failed, proceeding with original:', compressionError);
+                    console.warn('Compression failed, continuing with original file:', compressionError);
                 }
 
+                setStatusText('Uploading to Gallery...');
                 const timestamp = Date.now();
-                const fileName = `${timestamp}_${image.name}`;
+                // Clean filename to prevent issues
+                const cleanFileName = image.name.replace(/[^a-zA-Z0-9.]/g, '_');
+                const filePath = `gallery/${timestamp}_${cleanFileName}`;
 
-                const { data, error } = await supabase.storage
+                const { data: uploadData, error: uploadError } = await supabase.storage
                     .from('portfolio-images')
-                    .upload(`gallery/${fileName}`, fileToUpload);
+                    .upload(filePath, fileToUpload, {
+                        cacheControl: '3600',
+                        upsert: false
+                    });
 
-                if (error) {
-                    throw new Error(`Supabase upload failed: ${error.message}`);
-                }
+                if (uploadError) throw new Error(`Upload failed: ${uploadError.message}`);
 
-                const { data: { publicUrl } } = supabase.storage
+                // Get public URL
+                const { data: urlData } = supabase.storage
                     .from('portfolio-images')
-                    .getPublicUrl(`gallery/${fileName}`);
+                    .getPublicUrl(filePath);
 
-                imageUrl = publicUrl;
+                finalImageUrl = urlData.publicUrl;
             }
 
+            // --- Database Record Logic ---
+            setStatusText('Saving Masterpiece...');
+
+            // Prepare base data
             const itemData = {
-                title,
-                description,
+                title: title.trim(),
+                description: description.trim(),
             };
 
-            if (imageUrl) {
-                itemData.image_url = imageUrl;
+            // IMPORTANT: Only add image_url to the update payload IF a new one was generated.
+            // If editing and finalImageUrl is null, Supabase will keep the existing value.
+            if (finalImageUrl) {
+                itemData.image_url = finalImageUrl;
             }
 
             if (editingId) {
-                // Update existing
-                const { error } = await supabase
+                // --- UPDATE EXISTING ---
+                const { error: updateError } = await supabase
                     .from('artworks')
                     .update(itemData)
                     .eq('id', editingId);
 
-                if (error) throw error;
+                if (updateError) throw updateError;
 
                 Swal.fire({
                     title: 'Updated!',
-                    text: 'Masterpiece updated successfully!',
+                    text: 'The masterpiece has been updated.',
                     icon: 'success',
                     confirmButtonColor: '#D4AF37',
-                    background: '#111',
-                    color: '#fff'
+                    background: '#111', color: '#fff', timer: 2000, showConfirmButton: false
                 });
+
             } else {
-                // Create new
-                if (!imageUrl) throw new Error("Image is required for new items");
-                const { error } = await supabase
+                // --- CREATE NEW ---
+                // Safety check: Should be caught above, but double check image exists for new
+                if (!finalImageUrl) throw new Error("Failed to generate image URL for new item.");
+
+                const { error: insertError } = await supabase
                     .from('artworks')
                     .insert([{
                         ...itemData,
-                        image_url: imageUrl,
                         created_at: new Date().toISOString()
                     }]);
 
-                if (error) throw error;
+                if (insertError) throw insertError;
 
                 Swal.fire({
                     title: 'Published!',
-                    text: 'New masterpiece published successfully!',
+                    text: 'New masterpiece added to collection.',
                     icon: 'success',
                     confirmButtonColor: '#D4AF37',
-                    background: '#111',
-                    color: '#fff'
+                    background: '#111', color: '#fff', timer: 2000, showConfirmButton: false
                 });
             }
 
-            // Reset form
-            setTitle('');
-            setDescription('');
-            setImage(null);
-            setEditingId(null);
-            fetchItems();
+            resetForm();
+            // Small delay to allow Supabase propagation before re-fetching
+            setTimeout(fetchItems, 800);
 
         } catch (error) {
-            console.error("Error saving item:", error);
+            console.error("Operation failed:", error);
             Swal.fire({
                 title: 'Error',
-                text: 'Failed to save item: ' + (error.message || "Unknown error"),
+                text: error.message || "An unexpected error occurred.",
                 icon: 'error',
-                confirmButtonColor: '#D4AF37',
-                background: '#111',
-                color: '#fff'
+                confirmButtonColor: '#d33',
+                background: '#111', color: '#fff'
             });
+        } finally {
+            setIsSubmitting(false);
+            setStatusText('');
         }
-        setUploading(false);
     };
+
 
     const handleEdit = (item) => {
         setEditingId(item.id);
         setTitle(item.title);
         setDescription(item.description);
-        setImage(null); // Clear previous selection if any
+        // Important: We don't set 'image' file state, as we haven't picked a NEW one yet.
+        setImage(null);
+        // Set the preview URL to the existing remote URL so the user sees what's currently saved.
+        setPreviewUrl(item.image_url);
         window.scrollTo({ top: 0, behavior: 'smooth' });
+        // Reset file input if it had value previously
+        const fileInput = document.getElementById('artwork-file-input');
+        if (fileInput) fileInput.value = "";
     };
 
-    const handleDelete = async (id) => {
-        if (!window.confirm("Are you sure you want to delete this item?")) return;
-        try {
-            const { error } = await supabase
-                .from('artworks')
-                .delete()
-                .eq('id', id);
+    const handleDelete = async (id, imageUrl) => {
+        Swal.fire({
+            title: 'Are you sure?',
+            text: "You won't be able to revert this! The image will also be deleted from storage.",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Yes, delete it!',
+            background: '#111', color: '#fff'
+        }).then(async (result) => {
+            if (result.isConfirmed) {
+                try {
+                    setLoading(true);
+                    // 1. Delete database record
+                    const { error: dbError } = await supabase
+                        .from('artworks')
+                        .delete()
+                        .eq('id', id);
 
-            if (error) throw error;
-            fetchItems();
-        } catch (error) {
-            console.error("Error deleting item:", error);
-        }
+                    if (dbError) throw dbError;
+
+                    // 2. Try delete image from storage (optional step, good practice)
+                    if (imageUrl) {
+                        // Extract path from URL (e.g., 'gallery/123_image.jpg')
+                        const path = imageUrl.split('/portfolio-images/')[1];
+                        if (path) {
+                            await supabase.storage.from('portfolio-images').remove([path]);
+                        }
+                    }
+
+                    await fetchItems();
+                    Swal.fire({ title: 'Deleted!', text: 'Your file has been deleted.', icon: 'success', background: '#111', color: '#fff', timer: 1500, showConfirmButton: false });
+
+                } catch (error) {
+                    console.error("Delete failed:", error);
+                    Swal.fire({ icon: 'error', title: 'Delete Failed', text: error.message, background: '#111', color: '#fff' });
+                    setLoading(false); // Only stop loading on error, success will reload via fetchItems
+                }
+            }
+        })
     };
 
-    const cancelEdit = () => {
+
+    const resetForm = () => {
         setEditingId(null);
         setTitle('');
         setDescription('');
         setImage(null);
+        setPreviewUrl(null);
+        const fileInput = document.getElementById('artwork-file-input');
+        if (fileInput) fileInput.value = "";
     };
+
 
     return (
         <div className="dashboard-container">
@@ -200,18 +303,16 @@ const Dashboard = () => {
                     <h1 className="dashboard-title">Curator Dashboard</h1>
                     <div className="user-controls">
                         <span className="user-email">{currentUser?.email}</span>
-                        <button
-                            onClick={handleLogout}
-                            className="logout-btn"
-                        >
+                        <button onClick={handleLogout} className="logout-btn">
                             <LogOut size={18} /> Logout
                         </button>
                     </div>
                 </header>
 
                 <div className="dashboard-grid">
+                    {/* --- EDITOR COLUMN --- */}
                     <div className="editor-column">
-                        <div className="editor-card">
+                        <div className="editor-card shadow-lg">
                             <h2 className="section-title">
                                 {editingId ? <Edit2 size={20} /> : <Plus size={20} />}
                                 {editingId ? 'Edit Masterpiece' : 'Add New Masterpiece'}
@@ -219,105 +320,159 @@ const Dashboard = () => {
 
                             <form onSubmit={handleSubmit} className="editor-form">
                                 <div className="form-group">
-                                    <label>Title</label>
+                                    <label htmlFor="titleInput">Title</label>
                                     <input
+                                        id="titleInput"
                                         type="text"
                                         required
                                         value={title}
                                         onChange={(e) => setTitle(e.target.value)}
                                         className="editor-input"
                                         placeholder="e.g. The Silent Echo"
+                                        disabled={isSubmitting}
                                     />
                                 </div>
 
                                 <div className="form-group">
-                                    <label>Reflection / Description</label>
+                                    <label htmlFor="descInput">Reflection / Description</label>
                                     <textarea
+                                        id="descInput"
                                         required
                                         value={description}
                                         onChange={(e) => setDescription(e.target.value)}
                                         rows="6"
                                         className="editor-textarea"
                                         placeholder="Describe the soul of this piece..."
+                                        disabled={isSubmitting}
                                     />
                                 </div>
 
                                 <div className="form-group">
                                     <label>Artwork Image</label>
-                                    <div className="file-upload-box">
-                                        <input
-                                            type="file"
-                                            accept="image/*"
-                                            onChange={(e) => setImage(e.target.files[0])}
-                                            className="file-input-hidden"
-                                            required={!editingId}
-                                        />
-                                        <Upload className="upload-icon" />
-                                        <span className="upload-text">
-                                            {image ? image.name : "Drag or click to upload"}
-                                        </span>
+
+                                    {/* Enhanced Image Preview Area */}
+                                    <div className={`image-preview-area ${previewUrl ? 'has-image' : ''}`}>
+                                        {previewUrl ? (
+                                            <div className="preview-container">
+                                                <img src={previewUrl} alt="Preview" className="preview-img" />
+                                                {/* Overlay indicating if it's current or new */}
+                                                <div className="preview-overlay-badge">
+                                                    {image ? 'New Selection' : 'Current Image'}
+                                                </div>
+                                                {/* Button to clear selection (only if a NEW image is picked) */}
+                                                {image && (
+                                                    <button type="button" onClick={clearSelectedImage} className="clear-image-btn" title="Undo selection">
+                                                        <XCircle size={20} />
+                                                    </button>
+                                                )}
+                                            </div>
+                                        ) : (
+                                            <div className="placeholder-preview">
+                                                <ImageIcon size={40} opacity={0.3} />
+                                                <p>No image selected</p>
+                                            </div>
+                                        )}
                                     </div>
-                                    {editingId && !image && <p className="hint-text">Leave empty to keep current image</p>}
+
+                                    <div className={`file-upload-box ${isSubmitting ? 'disabled' : ''}`}>
+                                        <input
+                                            id="artwork-file-input"
+                                            type="file"
+                                            accept="image/png, image/jpeg, image/jpg, image/webp"
+                                            onChange={handleImageSelect}
+                                            className="file-input-hidden"
+                                            disabled={isSubmitting}
+                                        />
+                                        <label htmlFor="artwork-file-input" className="upload-label-wrapper">
+                                            <Upload className="upload-icon" />
+                                            <span className="upload-text">
+                                                {image ? "Click to change selection" : (editingId ? "Click to upload new version (optional)" : "Click to upload artwork")}
+                                            </span>
+                                        </label>
+                                    </div>
+                                    {editingId && !image && <p className="hint-text mt-2 text-sm text-gray-400">Keep blank to use the current image.</p>}
                                 </div>
 
                                 <div className="form-actions">
                                     {editingId && (
                                         <button
                                             type="button"
-                                            onClick={cancelEdit}
+                                            onClick={resetForm}
                                             className="cancel-btn"
+                                            disabled={isSubmitting}
                                         >
                                             Cancel
                                         </button>
                                     )}
                                     <button
                                         type="submit"
-                                        disabled={uploading}
-                                        className="submit-btn"
+                                        disabled={isSubmitting}
+                                        className={`submit-btn ${isSubmitting ? 'pulse-animation' : ''}`}
                                     >
-                                        {uploading ? 'Saving...' : (editingId ? 'Update' : 'Publish')}
+                                        {isSubmitting ? (
+                                            <span className="flex items-center gap-2">
+                                                <span className="loader-spinner small"></span>
+                                                {statusText}
+                                            </span>
+                                        ) : (
+                                            editingId ? 'Update Masterpiece' : 'Publish Masterpiece'
+                                        )}
                                     </button>
                                 </div>
                             </form>
                         </div>
                     </div>
 
+                    {/* --- LIST COLUMN --- */}
                     <div className="list-column">
                         <h2 className="section-title">Collection Inventory ({items.length})</h2>
                         {loading ? (
-                            <div className="loading-state">Loading collection...</div>
+                            <div className="loading-container">
+                                <div className="loader-spinner large"></div>
+                                <p>Loading collection...</p>
+                            </div>
                         ) : items.length === 0 ? (
                             <div className="empty-state">
-                                No pieces found. Add your first masterpiece on the left.
+                                <ImageIcon size={48} mb={4} opacity={0.5} />
+                                <p>No pieces found. Add your first masterpiece on the left.</p>
                             </div>
                         ) : (
-                            <div className="items-grid">
+                            <div className="items-grid two-columns">
                                 {items.map(item => (
                                     <motion.div
                                         key={item.id}
                                         layoutId={item.id}
-                                        className="inventory-card"
+                                        initial={{ opacity: 0, y: 20 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        className={`inventory-card ${editingId === item.id ? 'is-editing' : ''}`}
                                     >
-                                        <div className="card-image-box">
-                                            <img src={item.image_url} alt={item.title} />
+                                        <div className="card-image-box aspect-video">
+                                            <img src={item.image_url} alt={item.title} loading="lazy" />
                                             <div className="card-overlay">
                                                 <button
                                                     onClick={() => handleEdit(item)}
                                                     className="action-btn edit"
+                                                    disabled={isSubmitting}
+                                                    title="Edit this piece"
                                                 >
                                                     <Edit2 size={18} />
                                                 </button>
                                                 <button
-                                                    onClick={() => handleDelete(item.id)}
+                                                    onClick={() => handleDelete(item.id, item.image_url)}
                                                     className="action-btn delete"
+                                                    disabled={isSubmitting || editingId === item.id}
+                                                    title="Delete this piece"
                                                 >
                                                     <Trash2 size={18} />
                                                 </button>
                                             </div>
                                         </div>
-                                        <div className="card-details">
-                                            <h3 className="card-title">{item.title}</h3>
-                                            <p className="card-desc">{item.description}</p>
+                                        <div className="card-details p-4">
+                                            <h3 className="card-title text-lg font-semibold truncate">{item.title}</h3>
+                                            <p className="card-desc text-sm line-clamp-2 text-gray-400">{item.description}</p>
+                                            <span className="text-xs text-gray-500 mt-2 block">
+                                                {new Date(item.created_at).toLocaleDateString()}
+                                            </span>
                                         </div>
                                     </motion.div>
                                 ))}
@@ -330,4 +485,4 @@ const Dashboard = () => {
     );
 };
 
-export default Dashboard;
+export default Dashboard;   

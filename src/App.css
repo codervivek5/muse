@@ -2148,6 +2148,14 @@
     color: white;
 }
 
+/* HINT TEXT */
+.hint-text {
+    font-size: 0.8rem;
+    color: var(--theme-text-muted);
+    opacity: 0.7;
+    margin-top: 8px;
+}
+
 /* EDITOR COLUMN */
 .editor-card {
     background: #121212;
@@ -2162,6 +2170,81 @@
     display: flex;
     flex-direction: column;
     gap: 1.25rem;
+}
+
+/* IMAGE PREVIEW AREA */
+.image-preview-area {
+    width: 100%;
+    height: 200px;
+    background: #0d0d0d;
+    border-radius: 8px;
+    margin-bottom: 15px;
+    border: 1px solid #222;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.image-preview-area.has-image {
+    border-color: var(--accent-gold);
+}
+
+.preview-container {
+    position: relative;
+    width: 100%;
+    height: 100%;
+}
+
+.preview-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.preview-overlay-badge {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    background: rgba(0, 0, 0, 0.7);
+    color: var(--accent-gold);
+    padding: 4px 10px;
+    font-size: 10px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    border-radius: 4px;
+    border: 1px solid var(--accent-gold);
+}
+
+.clear-image-btn {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: rgba(239, 68, 68, 0.8);
+    border: none;
+    color: white;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.clear-image-btn:hover {
+    background: #ef4444;
+    transform: scale(1.1);
+}
+
+.placeholder-preview {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    color: var(--theme-text-muted);
 }
 
 .editor-input,
@@ -2205,6 +2288,21 @@
     height: 100%;
     opacity: 0;
     cursor: pointer;
+    z-index: 2;
+}
+
+.upload-label-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    width: 100%;
+}
+
+.file-upload-box.disabled {
+    opacity: 0.5;
+    pointer-events: none;
 }
 
 .upload-icon {
@@ -2239,10 +2337,27 @@
     background: var(--accent-gold);
     color: black;
     border: none;
-    padding: 10px;
+    padding: 14px;
     border-radius: 6px;
     font-weight: bold;
     cursor: pointer;
+    transition: all 0.3s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+}
+
+.submit-btn:hover {
+    filter: brightness(1.1);
+    transform: translateY(-2px);
+}
+
+.submit-btn:disabled {
+    background: #333;
+    color: #888;
+    cursor: not-allowed;
+    transform: none;
 }
 
 /* LIST COLUMN */
@@ -2256,10 +2371,77 @@
     color: var(--theme-text-muted);
 }
 
+.loading-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+    padding: 100px 0;
+}
+
+/* LOADER SPINNER */
+.loader-spinner {
+    border: 3px solid rgba(212, 175, 55, 0.1);
+    border-top: 3px solid var(--accent-gold);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+
+.loader-spinner.small {
+    width: 18px;
+    height: 18px;
+    border-width: 2px;
+}
+
+.loader-spinner.large {
+    width: 50px;
+    height: 50px;
+}
+
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+.pulse-animation {
+    animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+    0% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.7;
+    }
+
+    100% {
+        opacity: 1;
+    }
+}
+
 .items-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: 1.5rem;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    /* Reduced from 280px */
+    gap: 1.25rem;
+}
+
+.items-grid.two-columns {
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    /* Reduced from 350px */
+}
+
+@media (max-width: 1200px) {
+    .items-grid.two-columns {
+        grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    }
 }
 
 .inventory-card {
@@ -2274,8 +2456,13 @@
     border-color: rgba(212, 175, 55, 0.5);
 }
 
+.inventory-card.is-editing {
+    border: 2px solid var(--accent-gold);
+    box-shadow: 0 0 20px rgba(212, 175, 55, 0.3);
+}
+
 .card-image-box {
-    aspect-ratio: 4/3;
+    aspect-ratio: 16/9;
     position: relative;
     background: #0a0a0a;
 }
