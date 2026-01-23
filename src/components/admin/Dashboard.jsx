@@ -3,7 +3,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { supabase } from '../../supabaseClient';
 import imageCompression from 'browser-image-compression';
 import { motion } from 'framer-motion';
-import { Plus, Trash2, Edit2, LogOut, Upload, Image as ImageIcon, XCircle } from 'lucide-react';
+import { Plus, Trash2, Edit2, LogOut, Upload, Image as ImageIcon, XCircle, Search } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import Swal from 'sweetalert2';
 import '../../App.css';
@@ -24,6 +24,8 @@ const Dashboard = () => {
     const [previewUrl, setPreviewUrl] = useState(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [statusText, setStatusText] = useState('');
+    const [searchTerm, setSearchTerm] = useState('');
+    const [sortBy, setSortBy] = useState('newest'); // Options: newest, oldest, az, za
 
 
     useEffect(() => {
@@ -169,12 +171,18 @@ const Dashboard = () => {
 
             if (editingId) {
                 // --- UPDATE EXISTING ---
-                const { error: updateError } = await supabase
+                console.log('Attempting update for ID:', editingId, 'with data:', itemData);
+                const { data, error: updateError } = await supabase
                     .from('artworks')
                     .update(itemData)
-                    .eq('id', editingId);
+                    .eq('id', editingId)
+                    .select();
 
                 if (updateError) throw updateError;
+
+                if (!data || data.length === 0) {
+                    throw new Error("Update failed: No record was modified. This usually happens if your Supabase RLS policies are not set up for Updates.");
+                }
 
                 Swal.fire({
                     title: 'Updated!',
@@ -256,12 +264,18 @@ const Dashboard = () => {
                 try {
                     setLoading(true);
                     // 1. Delete database record
-                    const { error: dbError } = await supabase
+                    console.log('Attempting delete for ID:', id);
+                    const { data, error: dbError } = await supabase
                         .from('artworks')
                         .delete()
-                        .eq('id', id);
+                        .eq('id', id)
+                        .select();
 
                     if (dbError) throw dbError;
+
+                    if (!data || data.length === 0) {
+                        throw new Error("Delete failed: No record was removed. Ensure your Supabase RLS policies allow Deletions for authenticated users.");
+                    }
 
                     // 2. Try delete image from storage (optional step, good practice)
                     if (imageUrl) {
@@ -294,6 +308,20 @@ const Dashboard = () => {
         const fileInput = document.getElementById('artwork-file-input');
         if (fileInput) fileInput.value = "";
     };
+
+    // Filter and Sort items
+    const processedItems = items
+        .filter(item =>
+            item.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            item.description.toLowerCase().includes(searchTerm.toLowerCase())
+        )
+        .sort((a, b) => {
+            if (sortBy === 'newest') return new Date(b.created_at) - new Date(a.created_at);
+            if (sortBy === 'oldest') return new Date(a.created_at) - new Date(b.created_at);
+            if (sortBy === 'az') return a.title.localeCompare(b.title);
+            if (sortBy === 'za') return b.title.localeCompare(a.title);
+            return 0;
+        });
 
 
     return (
@@ -350,9 +378,9 @@ const Dashboard = () => {
                                 <div className="form-group">
                                     <label>Artwork Image</label>
 
-                                    {/* Enhanced Image Preview Area */}
-                                    <div className={`image-preview-area ${previewUrl ? 'has-image' : ''}`}>
-                                        {previewUrl ? (
+                                    {/* Enhanced Image Preview Area - only shows if an image exists or is selected */}
+                                    {previewUrl && (
+                                        <div className="image-preview-area has-image">
                                             <div className="preview-container">
                                                 <img src={previewUrl} alt="Preview" className="preview-img" />
                                                 {/* Overlay indicating if it's current or new */}
@@ -366,13 +394,8 @@ const Dashboard = () => {
                                                     </button>
                                                 )}
                                             </div>
-                                        ) : (
-                                            <div className="placeholder-preview">
-                                                <ImageIcon size={40} opacity={0.3} />
-                                                <p>No image selected</p>
-                                            </div>
-                                        )}
-                                    </div>
+                                        </div>
+                                    )}
 
                                     <div className={`file-upload-box ${isSubmitting ? 'disabled' : ''}`}>
                                         <input
@@ -425,20 +448,46 @@ const Dashboard = () => {
 
                     {/* --- LIST COLUMN --- */}
                     <div className="list-column">
-                        <h2 className="section-title">Collection Inventory ({items.length})</h2>
+                        <div className="inventory-header">
+                            <h2 className="section-title">Collection ({processedItems.length})</h2>
+
+                            <div className="inventory-controls">
+                                <div className="search-bar">
+                                    <Search size={16} className="search-icon" />
+                                    <input
+                                        type="text"
+                                        placeholder="Search..."
+                                        value={searchTerm}
+                                        onChange={(e) => setSearchTerm(e.target.value)}
+                                        className="search-input"
+                                    />
+                                </div>
+
+                                <select
+                                    value={sortBy}
+                                    onChange={(e) => setSortBy(e.target.value)}
+                                    className="sort-select"
+                                >
+                                    <option value="newest">Newest First</option>
+                                    <option value="oldest">Oldest First</option>
+                                    <option value="az">Title (A-Z)</option>
+                                    <option value="za">Title (Z-A)</option>
+                                </select>
+                            </div>
+                        </div>
                         {loading ? (
                             <div className="loading-container">
                                 <div className="loader-spinner large"></div>
                                 <p>Loading collection...</p>
                             </div>
-                        ) : items.length === 0 ? (
+                        ) : processedItems.length === 0 ? (
                             <div className="empty-state">
-                                <ImageIcon size={48} mb={4} opacity={0.5} />
-                                <p>No pieces found. Add your first masterpiece on the left.</p>
+                                <ImageIcon size={48} opacity={0.5} />
+                                <p>{searchTerm ? "No results found for your search." : "No pieces found. Add your first masterpiece on the left."}</p>
                             </div>
                         ) : (
                             <div className="items-grid two-columns">
-                                {items.map(item => (
+                                {processedItems.map(item => (
                                     <motion.div
                                         key={item.id}
                                         layoutId={item.id}
